@@ -503,10 +503,7 @@ func (d *Decoder) decodeStruct(v reflect.Value) (int, error) {
 		// Indirect through pointers allocating them as needed and
 		// ensure the field is settable.
 		vf := v.Field(i)
-		vf, err := d.indirect(vf)
-		if err != nil {
-			return n, err
-		}
+
 		if !vf.CanSet() {
 			msg := fmt.Sprintf("can't decode to unsettable '%v'",
 				vf.Type().String())
@@ -638,17 +635,24 @@ func (d *Decoder) decodeInterface(v reflect.Value) (int, error) {
 // the encapsulated reader.  It is a recursive function,
 // so cyclic data structures are not supported and will result in an infinite
 // loop.  It returns the  the number of bytes actually read.
-func (d *Decoder) decode(v reflect.Value) (int, error) {
-	if !v.IsValid() {
-		msg := fmt.Sprintf("type '%s' is not valid", v.Kind().String())
+func (d *Decoder) decode(ve reflect.Value) (int, error) {
+	if !ve.IsValid() {
+		msg := fmt.Sprintf("type '%s' is not valid", ve.Kind().String())
 		err := unmarshalError("decode", ErrUnsupportedType, msg, nil, nil)
 		return 0, err
 	}
 
-	// Indirect through pointers allocating them as needed.
-	ve, err := d.indirect(v)
-	if err != nil {
-		return 0, err
+	if ve.Kind() == reflect.Ptr {
+		present, n, err := d.DecodeBool()
+
+		if err != nil || !present {
+			return n, err
+		}
+
+		ve, err = d.indirect(ve)
+		if err != nil {
+			return n, err
+		}
 	}
 
 	// Handle time.Time values by decoding them as an RFC3339 formatted
@@ -789,7 +793,7 @@ func (d *Decoder) decode(v reflect.Value) (int, error) {
 	// writing the only remaining unsupported types that exist are
 	// reflect.Uintptr and reflect.UnsafePointer.
 	msg := fmt.Sprintf("unsupported Go type '%s'", ve.Kind().String())
-	err = unmarshalError("decode", ErrUnsupportedType, msg, nil, nil)
+	err := unmarshalError("decode", ErrUnsupportedType, msg, nil, nil)
 	return 0, err
 }
 
@@ -841,7 +845,7 @@ func (d *Decoder) Decode(v interface{}) (int, error) {
 		return 0, err
 	}
 
-	return d.decode(vv)
+	return d.decode(vv.Elem())
 }
 
 // NewDecoder returns a Decoder that can be used to manually decode XDR data
