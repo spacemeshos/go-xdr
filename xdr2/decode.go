@@ -492,11 +492,18 @@ func (d *Decoder) decodeUnion(v reflect.Value) (int, error) {
 	vs := v.FieldByName(u.SwitchFieldName())
 	vs.SetInt(int64(i))
 
-	arm := u.ArmForSwitch(i)
+	arm, ok := u.ArmForSwitch(i)
+
+	if !ok {
+		msg := fmt.Sprintf("switch '%d' is not valid for union", i)
+		err := unmarshalError("decode", ErrBadUnionSwitch, msg, nil, nil)
+		return n, err
+	}
 
 	if arm == "" {
 		return n, nil
 	}
+
 	vv := v.FieldByName(arm)
 
 	vv.Set(reflect.New(vv.Type().Elem()))

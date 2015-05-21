@@ -63,6 +63,9 @@ const (
 	// RFC3339 formatted time value.  The actual underlying error will be
 	// available via the Err field of the UnmarshalError struct.
 	ErrParseTime
+
+	// ErrBadUnionSwitch indicates a union's disciminant is invalid
+	ErrBadUnionSwitch
 )
 
 // Map of ErrorCode values back to their constant names for pretty printing.
@@ -75,6 +78,7 @@ var errorCodeStrings = map[ErrorCode]string{
 	ErrNilInterface:    "ErrNilInterface",
 	ErrIO:              "ErrIO",
 	ErrParseTime:       "ErrParseTime",
+	ErrBadUnionSwitch:  "ErrBadUnionSwitch",
 }
 
 // String returns the ErrorCode as a human-readable name.

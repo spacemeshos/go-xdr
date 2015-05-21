@@ -5,6 +5,6 @@ type Enum interface {
 }
 
 type Union interface {
-	ArmForSwitch(int32) string
+	ArmForSwitch(int32) (string, bool)
 	SwitchFieldName() string
 }
