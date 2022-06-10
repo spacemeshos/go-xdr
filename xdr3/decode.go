@@ -27,6 +27,9 @@ import (
 
 const maxInt32 = int(^uint32(0) >> 1)
 
+// SliceLimit is a limit on the size of the slice.
+var SliceLimit = maxInt32
+
 var errMaxSlice = "data exceeds max slice limit"
 var errIODecode = "%s while decoding %d bytes"
 
@@ -307,7 +310,7 @@ func (d *Decoder) DecodeFixedOpaque(size int32) ([]byte, int, error) {
 
 	pad := (4 - (size % 4)) % 4
 	paddedSize := size + pad
-	if uint(paddedSize) > uint(maxInt32) {
+	if uint(paddedSize) > uint(SliceLimit) {
 		err := unmarshalError("DecodeFixedOpaque", ErrOverflow,
 			errMaxSlice, paddedSize, nil)
 		return nil, 0, err
@@ -357,7 +360,7 @@ func (d *Decoder) DecodeOpaque(maxSize int) ([]byte, int, error) {
 	}
 
 	if maxSize == 0 {
-		maxSize = maxInt32
+		maxSize = SliceLimit
 	}
 
 	if uint(dataLen) > uint(maxSize) {
@@ -395,7 +398,7 @@ func (d *Decoder) DecodeString(maxSize int) (string, int, error) {
 	}
 
 	if maxSize == 0 {
-		maxSize = maxInt32
+		maxSize = SliceLimit
 	}
 
 	if uint(dataLen) > uint(maxSize) {
@@ -470,7 +473,7 @@ func (d *Decoder) decodeArray(v reflect.Value, ignoreOpaque bool, maxSize int) (
 	}
 
 	if maxSize == 0 {
-		maxSize = maxInt32
+		maxSize = SliceLimit
 	}
 
 	if uint(dataLen) > uint(maxSize) {
